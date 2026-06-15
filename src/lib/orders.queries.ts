@@ -59,8 +59,8 @@ export function orderQuery(orderId: string) {
       if (orderRes.error) throw orderRes.error;
       if (itemsRes.error) throw itemsRes.error;
       return {
-        order: orderRes.data as Order,
-        items: (itemsRes.data ?? []) as OrderItem[],
+        order: orderRes.data as unknown as Order,
+        items: (itemsRes.data ?? []) as unknown as OrderItem[],
       };
     },
   });
