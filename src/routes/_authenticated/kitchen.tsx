@@ -66,7 +66,7 @@ function KitchenPage() {
   async function advance(id: string, status: OrderStatus) {
     const idx = KITCHEN_STATUS_FLOW.indexOf(status);
     const next = KITCHEN_STATUS_FLOW[idx + 1] ?? status;
-    const patch: Record<string, unknown> = { status: next };
+    const patch: { status: OrderStatus; ready_at?: string; completed_at?: string } = { status: next };
     if (next === "ready") patch.ready_at = new Date().toISOString();
     if (next === "completed") patch.completed_at = new Date().toISOString();
     await supabase.from("orders").update(patch).eq("id", id);
