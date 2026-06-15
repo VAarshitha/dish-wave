@@ -10,12 +10,12 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const tabs = [
+  const tabs: ReadonlyArray<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
     { to: "/_authenticated/admin", label: "Orders", icon: LayoutDashboard, exact: true },
     { to: "/_authenticated/admin/menu", label: "Menu", icon: Utensils },
     { to: "/_authenticated/admin/settings", label: "Settings", icon: Settings },
     { to: "/_authenticated/kitchen", label: "Kitchen", icon: KanbanSquare },
-  ] as const;
+  ];
 
   async function signOut() {
     await supabase.auth.signOut();
