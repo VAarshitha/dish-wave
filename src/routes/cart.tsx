@@ -87,9 +87,7 @@ function CartPage() {
           customer_phone: phone || null,
           subtotal,
           tax,
-          discount,
           total,
-          coupon_code: appliedCoupon,
           status: "pending_payment",
           payment_status: "pending",
         })
