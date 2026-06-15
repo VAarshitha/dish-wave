@@ -294,18 +294,25 @@
 @utility animate-blob { animation: blob 16s ease-in-out infinite; }
 @utility animate-steam { animation: steam 3s ease-out infinite; }
 
-@utility shine-overlay {
-  position: relative;
-  overflow: hidden;
-}
-@utility shine-overlay::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, transparent 30%, oklch(1 0 0 / 0.18) 50%, transparent 70%);
-  transform: translateX(-120%) skewX(-12deg);
-  animation: shine 3.4s ease-in-out infinite;
-  pointer-events: none;
+@layer components {
+  .shine-overlay {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      oklch(1 0 0 / 0.18) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%) skewX(-12deg);
+    animation: shine 3.4s ease-in-out infinite;
+    pointer-events: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
