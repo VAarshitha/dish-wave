@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { Bell, CheckCircle2, ChefHat, ClipboardCheck, Flame, Sparkles, MapPin, Volume2 } from "lucide-react";
+import { Bell, CheckCircle2, ChefHat, Sparkles, MapPin, Wallet, Receipt } from "lucide-react";
 import { AppHeader } from "@/components/customer/AppHeader";
 import {
   orderQuery,
@@ -27,12 +27,8 @@ export const Route = createFileRoute("/order/$orderId")({
 });
 
 const STAGE_META: Record<OrderStatus, { label: string; icon: typeof Bell; tip: string }> = {
-  pending_payment: { label: "Awaiting payment", icon: ClipboardCheck, tip: "Complete UPI payment to start." },
-  payment_submitted: { label: "Verifying payment", icon: ClipboardCheck, tip: "Restaurant is confirming your payment…" },
-  payment_verified: { label: "Order received", icon: CheckCircle2, tip: "We've got your order. Hold tight." },
+  received: { label: "Order received", icon: Receipt, tip: "Show your serial number at the counter to pay." },
   preparing: { label: "Preparing", icon: ChefHat, tip: "Our chefs are gathering ingredients." },
-  cooking: { label: "Cooking", icon: Flame, tip: "Sizzling on the grill right now." },
-  quality_check: { label: "Quality check", icon: Sparkles, tip: "Final taste & temperature check." },
   ready: { label: "Ready for pickup", icon: Bell, tip: "Walk to the counter — your feast is hot!" },
   completed: { label: "Completed", icon: CheckCircle2, tip: "Enjoy your meal." },
   cancelled: { label: "Cancelled", icon: CheckCircle2, tip: "" },
@@ -43,7 +39,7 @@ const COOKING_TIPS = [
   "Tip: every batch is freshly cooked — never reheated.",
   "Our peri peri is hand-blended in small batches.",
   "Hot food tastes better. We promise it'll be worth the wait.",
-  "Fun fact: Albaik means 'the best' in Arabic. Coincidence? We think not.",
+  "Fun fact: Albaik means 'the best' in Arabic.",
   "Our oil is filtered every 4 hours for that perfect crunch.",
 ];
 
@@ -54,7 +50,6 @@ function OrderPage() {
   const { data } = useSuspenseQuery(orderQuery(orderId));
   const { order, items } = data;
 
-  // Realtime
   useEffect(() => {
     const ch = supabase
       .channel(`order-${orderId}`)
@@ -64,10 +59,11 @@ function OrderPage() {
         () => refetch(),
       )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [orderId, refetch]);
 
-  // Celebrate when ready
   useEffect(() => {
     if (order.status === "ready") {
       try { navigator.vibrate?.([200, 80, 200, 80, 200]); } catch { /* noop */ }
@@ -87,16 +83,17 @@ function OrderPage() {
     }
   }, [order.status]);
 
-  const currentIdx = CUSTOMER_PROGRESS.indexOf(order.status as OrderStatus);
-  const isReady = order.status === "ready" || order.status === "completed";
+  const status = order.status as OrderStatus;
+  const currentIdx = CUSTOMER_PROGRESS.indexOf(status);
+  const isReady = status === "ready" || status === "completed";
 
-  // Estimated minutes remaining: pretend each step is ~3 min
   const stepsLeft = Math.max(0, CUSTOMER_PROGRESS.length - 1 - currentIdx);
-  const etaMin = Math.max(2, stepsLeft * 3);
+  const etaMin = Math.max(2, stepsLeft * 4);
+
+  const serial = order.serial_number ?? `S${order.order_number}`;
 
   return (
     <div className="relative min-h-screen overflow-hidden pb-16">
-      {/* Animated background blobs */}
       {!isReady && (
         <>
           <div className="pointer-events-none absolute -top-24 -left-16 h-72 w-72 rounded-full bg-primary/15 blur-3xl animate-blob" aria-hidden />
@@ -104,20 +101,38 @@ function OrderPage() {
         </>
       )}
 
-      <AppHeader
-        title={`Order #${order.order_number}`}
-        subtitle={order.table_label ?? "Self pickup"}
-        showCart={false}
-      />
+      <AppHeader title={`Order ${serial}`} subtitle="Self pickup" showCart={false} />
 
       <div className="relative mx-auto max-w-md px-5 pt-6">
+        {/* Serial number card — always visible at top */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 overflow-hidden rounded-[28px] border border-glass-border bg-[var(--gradient-card)] p-5 text-center shadow-elevated"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+            Your serial number
+          </p>
+          <motion.p
+            initial={{ scale: 0.7 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", damping: 14 }}
+            className="mt-1 text-6xl font-black leading-none tracking-tight text-gradient-primary"
+          >
+            {serial}
+          </motion.p>
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-[11px] text-muted-foreground">
+            <Wallet className="h-3 w-3" />
+            Show this at the billing counter to pay
+          </p>
+        </motion.div>
+
         <AnimatePresence mode="wait">
           {isReady ? (
             <ReadyCelebration
               key="ready"
-              orderNumber={order.order_number}
+              serial={serial}
               pickupInstructions={restaurant.pickup_instructions ?? ""}
-              tableLabel={order.table_label ?? "the counter"}
             />
           ) : (
             <motion.div
@@ -128,16 +143,14 @@ function OrderPage() {
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="relative overflow-hidden rounded-[28px] border border-glass-border bg-[var(--gradient-card)] p-6 text-center shadow-elevated"
             >
-              <CurrentStageCard status={order.status as OrderStatus} />
+              <CurrentStageCard status={status} />
 
-              {/* ETA */}
               <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-glass-border bg-white/[0.04] px-3.5 py-1.5 text-[11px]">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
                 <span className="font-semibold tabular-nums">~{etaMin} min</span>
                 <span className="text-muted-foreground">estimated</span>
               </div>
 
-              {/* Timeline */}
               <div className="mt-6 grid gap-2.5 text-left">
                 {CUSTOMER_PROGRESS.map((s, i) => {
                   const Meta = STAGE_META[s];
@@ -148,9 +161,7 @@ function OrderPage() {
                       key={s}
                       layout
                       initial={false}
-                      animate={{
-                        scale: active ? 1.01 : 1,
-                      }}
+                      animate={{ scale: active ? 1.01 : 1 }}
                       transition={{ type: "spring", damping: 22, stiffness: 320 }}
                       className={`flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 text-sm transition-colors duration-300 ${
                         active
@@ -176,9 +187,7 @@ function OrderPage() {
                         {STATUS_LABELS[s]}
                       </span>
                       {active && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                          Now
-                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Now</span>
                       )}
                     </motion.div>
                   );
@@ -188,14 +197,10 @@ function OrderPage() {
           )}
         </AnimatePresence>
 
-        {/* Rotating cooking tip */}
-        {!isReady && currentIdx >= 2 && <CookingTip />}
+        {!isReady && currentIdx >= 1 && <CookingTip />}
 
-        {/* Order details */}
         <div className="mt-5 rounded-3xl border border-glass-border bg-white/[0.03] p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Your order
-          </h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your order</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {items.map((it) => (
               <li key={it.id} className="flex justify-between gap-3">
@@ -214,7 +219,7 @@ function OrderPage() {
             ))}
           </ul>
           <div className="mt-3 flex justify-between border-t border-glass-border pt-3 text-base font-bold">
-            <span>Total</span>
+            <span>Total to pay</span>
             <span className="tabular-nums">{formatCurrency(Number(order.total), restaurant.currency_symbol)}</span>
           </div>
         </div>
@@ -233,14 +238,12 @@ function OrderPage() {
 function CurrentStageCard({ status }: { status: OrderStatus }) {
   const Meta = STAGE_META[status];
   const Icon = Meta.icon;
-  const isCooking = status === "cooking" || status === "preparing";
+  const isCooking = status === "preparing";
   return (
     <div className="relative">
       <div className="relative mx-auto inline-flex h-28 w-28 items-center justify-center">
-        {/* Pulse rings */}
         <span className="absolute inset-0 rounded-full bg-primary/30 animate-pulse-ring" />
         <span className="absolute inset-0 rounded-full bg-primary/20 animate-pulse-ring" style={{ animationDelay: "0.6s" }} />
-        {/* Steam particles when cooking */}
         {isCooking && (
           <>
             <span className="absolute -top-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-white/60 blur-sm animate-steam" />
@@ -308,15 +311,7 @@ function CookingTip() {
   );
 }
 
-function ReadyCelebration({
-  orderNumber,
-  pickupInstructions,
-  tableLabel,
-}: {
-  orderNumber: number;
-  pickupInstructions: string;
-  tableLabel: string;
-}) {
+function ReadyCelebration({ serial, pickupInstructions }: { serial: string; pickupInstructions: string }) {
   return (
     <motion.div
       initial={{ scale: 0.85, opacity: 0 }}
@@ -325,7 +320,6 @@ function ReadyCelebration({
       className="relative overflow-hidden rounded-[28px] border-2 p-8 text-center shadow-glow-success"
       style={{ borderColor: "var(--success)", background: "var(--gradient-success)" }}
     >
-      {/* Shimmer */}
       <div className="pointer-events-none absolute inset-0 shine-overlay" />
 
       <div className="relative mx-auto inline-flex h-32 w-32 items-center justify-center">
@@ -349,26 +343,16 @@ function ReadyCelebration({
         transition={{ delay: 0.2, type: "spring", damping: 14 }}
         className="mt-2 text-7xl font-black leading-none tracking-tight text-success-foreground"
       >
-        #{orderNumber}
+        {serial}
       </motion.p>
 
       <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/20 px-3.5 py-1.5 text-xs font-semibold text-success-foreground">
-        <MapPin className="h-3.5 w-3.5" /> {tableLabel}
+        <MapPin className="h-3.5 w-3.5" /> Billing counter
       </div>
 
       {pickupInstructions && (
-        <p className="mt-4 text-sm leading-relaxed text-success-foreground/90">
-          {pickupInstructions}
-        </p>
+        <p className="mt-4 text-sm leading-relaxed text-success-foreground/90">{pickupInstructions}</p>
       )}
-
-      <Link
-        to="/menu"
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-bold text-success shadow-elevated transition active:scale-[0.98]"
-      >
-        <Volume2 className="h-4 w-4" />
-        Collect your order
-      </Link>
     </motion.div>
   );
 }

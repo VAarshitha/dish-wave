@@ -1,8 +1,8 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 export type CartAddon = { name: string; price: number };
 export type CartLine = {
-  key: string; // composed key: itemId + addons hash
+  key: string;
   itemId: string;
   name: string;
   price: number;
@@ -13,7 +13,6 @@ export type CartLine = {
 };
 
 const STORAGE_KEY = "albaik.cart.v1";
-const TABLE_KEY = "albaik.table.v1";
 
 type CartState = { lines: CartLine[] };
 const listeners = new Set<() => void>();
@@ -52,12 +51,10 @@ function subscribe(cb: () => void) {
   listeners.add(cb);
   return () => listeners.delete(cb);
 }
-
 function getSnapshot() {
   ensureInit();
   return state;
 }
-
 function getServerSnapshot(): CartState {
   return { lines: [] };
 }
@@ -67,10 +64,7 @@ export function useCart() {
 }
 
 function keyFor(itemId: string, addons: CartAddon[], instructions?: string) {
-  const a = [...addons]
-    .map((x) => x.name)
-    .sort()
-    .join("|");
+  const a = [...addons].map((x) => x.name).sort().join("|");
   return `${itemId}::${a}::${instructions ?? ""}`;
 }
 
@@ -80,9 +74,7 @@ export function addToCart(line: Omit<CartLine, "key" | "qty"> & { qty?: number }
   const existing = state.lines.find((l) => l.key === key);
   const qty = line.qty ?? 1;
   if (existing) {
-    state = {
-      lines: state.lines.map((l) => (l.key === key ? { ...l, qty: l.qty + qty } : l)),
-    };
+    state = { lines: state.lines.map((l) => (l.key === key ? { ...l, qty: l.qty + qty } : l)) };
   } else {
     state = { lines: [...state.lines, { ...line, key, qty }] };
   }
@@ -118,32 +110,4 @@ export function lineTotal(line: CartLine) {
 
 export function cartTotal(lines: CartLine[]) {
   return lines.reduce((s, l) => s + lineTotal(l), 0);
-}
-
-// Table selection -----------------------------------------------------------
-
-export function setTable(t: { id: string; label: string }) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(TABLE_KEY, JSON.stringify(t));
-}
-
-export function getTable(): { id: string; label: string } | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(TABLE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function useTable() {
-  const [t, setT] = useState<{ id: string; label: string } | null>(null);
-  useEffect(() => {
-    setT(getTable());
-    const handler = () => setT(getTable());
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
-  return t;
 }

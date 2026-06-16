@@ -1,32 +1,20 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type OrderStatus =
-  | "pending_payment"
-  | "payment_submitted"
-  | "payment_verified"
-  | "preparing"
-  | "cooking"
-  | "quality_check"
-  | "ready"
-  | "completed"
-  | "cancelled";
-
-export type PaymentStatus = "pending" | "submitted" | "verified" | "failed";
+export type OrderStatus = "received" | "preparing" | "ready" | "completed" | "cancelled";
 
 export type Order = {
   id: string;
   order_number: number;
+  serial_number: string | null;
+  serial_date: string | null;
   restaurant_id: string;
-  table_id: string | null;
-  table_label: string | null;
   customer_name: string | null;
   customer_phone: string | null;
   subtotal: number;
+  tax: number;
   total: number;
   status: OrderStatus;
-  payment_status: PaymentStatus;
-  upi_txn_ref: string | null;
   notes: string | null;
   created_at: string;
   ready_at: string | null;
@@ -67,30 +55,22 @@ export function orderQuery(orderId: string) {
 }
 
 export const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending_payment: "Awaiting payment",
-  payment_submitted: "Verifying payment",
-  payment_verified: "Order received",
+  received: "Order received",
   preparing: "Preparing",
-  cooking: "Cooking",
-  quality_check: "Quality check",
   ready: "Ready for pickup",
   completed: "Completed",
   cancelled: "Cancelled",
 };
 
 export const KITCHEN_STATUS_FLOW: OrderStatus[] = [
-  "payment_verified",
+  "received",
   "preparing",
-  "cooking",
-  "quality_check",
   "ready",
   "completed",
 ];
 
 export const CUSTOMER_PROGRESS: OrderStatus[] = [
-  "payment_verified",
+  "received",
   "preparing",
-  "cooking",
-  "quality_check",
   "ready",
 ];
