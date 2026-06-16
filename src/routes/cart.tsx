@@ -80,7 +80,7 @@ function CartPage() {
         _subtotal: subtotal,
         _tax: tax,
         _total: total,
-        _notes: appliedCoupon ? `Coupon: ${appliedCoupon}` : null,
+        _notes: appliedCoupon ? `Coupon: ${appliedCoupon}` : "",
         _items: itemsPayload as unknown as never,
       });
       if (error) throw error;
