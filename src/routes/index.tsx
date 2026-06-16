@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ChefHat, Sparkles } from "lucide-react";
+import { ChefHat, Sparkles, Table2 } from "lucide-react";
 import heroImg from "@/assets/hero-chicken.jpg";
 
 export const Route = createFileRoute("/")({
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Premium QR-based restaurant ordering. Scan once, browse the menu, pay with UPI, and pick up when ready.",
+          "Premium QR-based restaurant ordering. Scan once, choose your table, browse the menu, pay with UPI, and pick up when ready.",
       },
       {
         property: "og:title",
@@ -64,7 +64,7 @@ function Landing() {
               Scan Once.
               <br />
               <span className="text-gradient-primary">
-                Start Ordering.
+                Choose Your Table.
               </span>
             </h1>
 
@@ -96,27 +96,58 @@ function Landing() {
               </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Delicious food, seamless ordering, and instant pickup.
+                Please select your table to begin ordering.
               </p>
             </div>
           </motion.div>
 
-          {/* CTA */}
-          <div className="mt-8">
-            <Link
-              to="/menu"
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-6 py-4 text-lg font-semibold text-primary-foreground transition hover:opacity-90"
-            >
-              Start Ordering
-            </Link>
-          </div>
+          {/* Section Heading */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+            className="mt-10"
+          >
+            <h2 className="text-2xl font-bold">
+              Select Your Table
+            </h2>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              Choose the table you're currently sitting at.
+            </p>
+          </motion.div>
+
+          {/* Table Grid */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45 }}
+            className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-5"
+          >
+            {Array.from({ length: 20 }, (_, i) => i + 1).map((table) => (
+              <Link
+                key={table}
+                to="/t/$qr"
+                params={{
+                  qr: `albaik-t${table}`,
+                }}
+                className="group rounded-2xl border border-glass-border bg-white/[0.04] p-5 text-center transition-all duration-300 hover:scale-105 hover:border-primary hover:shadow-glow"
+              >
+                <Table2 className="mx-auto h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
+
+                <div className="mt-3 text-base font-semibold">
+                  Table {table}
+                </div>
+              </Link>
+            ))}
+          </motion.div>
 
           {/* Features */}
           <div className="mt-12 grid gap-4 sm:grid-cols-3">
             {[
               [
-                "Browse Menu",
-                "Explore our delicious dishes with a modern digital menu.",
+                "Choose Table",
+                "Select your table before placing an order.",
               ],
               [
                 "Pay with UPI",
@@ -131,7 +162,9 @@ function Landing() {
                 key={title}
                 className="rounded-2xl border border-glass-border bg-white/[0.03] p-5"
               >
-                <h3 className="font-semibold">{title}</h3>
+                <h3 className="font-semibold">
+                  {title}
+                </h3>
 
                 <p className="mt-2 text-sm text-muted-foreground">
                   {desc}
