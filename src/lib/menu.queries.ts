@@ -40,8 +40,6 @@ export type Restaurant = {
   name: string;
   tagline: string | null;
   currency_symbol: string;
-  upi_id: string | null;
-  upi_payee_name: string | null;
   pickup_instructions: string | null;
 };
 
@@ -50,7 +48,7 @@ export const restaurantQuery = queryOptions({
   queryFn: async (): Promise<Restaurant> => {
     const { data, error } = await supabase
       .from("restaurants")
-      .select("id,name,tagline,currency_symbol,upi_id,upi_payee_name,pickup_instructions")
+      .select("id,name,tagline,currency_symbol,pickup_instructions")
       .eq("id", DEMO_RESTAURANT_ID)
       .single();
     if (error) throw error;

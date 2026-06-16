@@ -13,7 +13,6 @@ import { ItemCard } from "@/components/customer/ItemCard";
 import { ItemSheet } from "@/components/customer/ItemSheet";
 import { AppHeader } from "@/components/customer/AppHeader";
 import { FloatingCartBar } from "@/components/customer/FloatingCartBar";
-import { useTable } from "@/lib/cart";
 
 export const Route = createFileRoute("/menu")({
   head: () => ({ meta: [{ title: "Menu — Albaik" }] }),
@@ -35,7 +34,6 @@ function MenuPage() {
   const { data: restaurant } = useSuspenseQuery(restaurantQuery);
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const { data: items } = useSuspenseQuery(menuItemsQuery);
-  const table = useTable();
   const [activeCat, setActiveCat] = useState<Tab>("best");
   const [search, setSearch] = useState("");
   const [sheetItem, setSheetItem] = useState<MenuItem | null>(null);
@@ -70,13 +68,9 @@ function MenuPage() {
 
   return (
     <div className="min-h-screen pb-32">
-      <AppHeader
-        title={restaurant.name}
-        subtitle={table ? `${table.label} · Self pickup` : restaurant.tagline ?? ""}
-      />
+      <AppHeader title={restaurant.name} subtitle={restaurant.tagline ?? "Order, pay at the counter"} backTo="/" />
 
       <div className="mx-auto max-w-3xl px-4">
-        {/* Search */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,7 +96,6 @@ function MenuPage() {
           ) : null}
         </motion.div>
 
-        {/* Featured banner — Chef's picks rail */}
         {!search && featured.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 10 }}
@@ -164,27 +157,12 @@ function MenuPage() {
           </motion.section>
         )}
 
-        {/* Sticky category bar */}
         {!search && (
           <div className="sticky top-[58px] z-20 -mx-4 mt-4 bg-background/80 px-4 py-2 backdrop-blur-xl">
             <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-              <CategoryPill
-                label="🔥 Best Sellers"
-                active={activeCat === "best"}
-                onClick={() => setActiveCat("best")}
-              />
-              <CategoryPill
-                label="✨ Chef's Picks"
-                active={activeCat === "chef"}
-                onClick={() => setActiveCat("chef")}
-                icon={Sparkles}
-              />
-              <CategoryPill
-                label="🆕 New"
-                active={activeCat === "new"}
-                onClick={() => setActiveCat("new")}
-                icon={TrendingUp}
-              />
+              <CategoryPill label="🔥 Best Sellers" active={activeCat === "best"} onClick={() => setActiveCat("best")} />
+              <CategoryPill label="✨ Chef's Picks" active={activeCat === "chef"} onClick={() => setActiveCat("chef")} icon={Sparkles} />
+              <CategoryPill label="🆕 New" active={activeCat === "new"} onClick={() => setActiveCat("new")} icon={TrendingUp} />
               {categories.map((c) => (
                 <CategoryPill
                   key={c.id}
@@ -197,7 +175,6 @@ function MenuPage() {
           </div>
         )}
 
-        {/* Section header */}
         <div className="mt-4 flex items-center justify-between px-1">
           <h2 className="text-base font-bold tracking-tight">{activeLabel}</h2>
           <span className="text-[11px] text-muted-foreground">
@@ -205,7 +182,6 @@ function MenuPage() {
           </span>
         </div>
 
-        {/* Items grid */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeCat + search}
@@ -219,9 +195,7 @@ function MenuPage() {
               <div className="rounded-3xl border border-glass-border bg-white/[0.02] py-14 text-center">
                 <div className="text-5xl">🥲</div>
                 <p className="mt-3 text-sm font-medium">No dishes match</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Try a different search or category.
-                </p>
+                <p className="mt-1 text-xs text-muted-foreground">Try a different search or category.</p>
               </div>
             ) : (
               filtered.map((it, i) => (

@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ChevronRight, ChefHat, LogOut } from "lucide-react";
+import { Bell, ChevronRight, ChefHat, LogOut, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { KITCHEN_STATUS_FLOW, STATUS_LABELS, type OrderStatus } from "@/lib/orders.queries";
 import { formatCurrency, relativeTime } from "@/lib/format";
@@ -15,12 +15,33 @@ export const Route = createFileRoute("/_authenticated/kitchen")({
 type KOrder = {
   id: string;
   order_number: number;
-  table_label: string | null;
+  serial_number: string | null;
   total: number;
   status: OrderStatus;
   created_at: string;
 };
-type KItem = { id: string; order_id: string; name_snapshot: string; qty: number };
+type KItem = {
+  id: string;
+  order_id: string;
+  name_snapshot: string;
+  qty: number;
+  special_instructions: string | null;
+};
+
+function playDing() {
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new Ctx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 740; g.gain.value = 0.07;
+    o.start();
+    o.frequency.exponentialRampToValueAtTime(1180, ctx.currentTime + 0.15);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    o.stop(ctx.currentTime + 0.55);
+  } catch { /* noop */ }
+}
 
 function KitchenPage() {
   const qc = useQueryClient();
@@ -29,8 +50,8 @@ function KitchenPage() {
     queryFn: async (): Promise<KOrder[]> => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id,order_number,table_label,total,status,created_at")
-        .in("status", ["payment_verified", "preparing", "cooking", "quality_check", "ready"])
+        .select("id,order_number,serial_number,total,status,created_at")
+        .in("status", ["received", "preparing", "ready"])
         .order("created_at");
       if (error) throw error;
       return (data ?? []) as KOrder[];
@@ -43,13 +64,27 @@ function KitchenPage() {
       if (orderIds.length === 0) return [];
       const { data, error } = await supabase
         .from("order_items")
-        .select("id,order_id,name_snapshot,qty")
+        .select("id,order_id,name_snapshot,qty,special_instructions")
         .in("order_id", orderIds);
       if (error) throw error;
       return (data ?? []) as KItem[];
     },
     enabled: orderIds.length > 0,
   });
+
+  // Audible alert on new orders
+  const seen = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const firstRun = seen.current.size === 0;
+    const newOnes: string[] = [];
+    orders.forEach((o) => {
+      if (!seen.current.has(o.id)) {
+        if (!firstRun && o.status === "received") newOnes.push(o.id);
+        seen.current.add(o.id);
+      }
+    });
+    if (newOnes.length > 0) playDing();
+  }, [orders]);
 
   useEffect(() => {
     const ch = supabase
@@ -58,9 +93,7 @@ function KitchenPage() {
         qc.invalidateQueries({ queryKey: ["kitchen", "orders"] }),
       )
       .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
+    return () => { supabase.removeChannel(ch); };
   }, [qc]);
 
   async function advance(id: string, status: OrderStatus) {
@@ -79,10 +112,8 @@ function KitchenPage() {
   }
 
   const columns: { key: OrderStatus; label: string }[] = [
-    { key: "payment_verified", label: "New" },
+    { key: "received", label: "New" },
     { key: "preparing", label: "Preparing" },
-    { key: "cooking", label: "Cooking" },
-    { key: "quality_check", label: "QC" },
     { key: "ready", label: "Ready" },
   ];
 
@@ -100,7 +131,7 @@ function KitchenPage() {
             to="/_authenticated/admin"
             className="ml-auto rounded-full border border-glass-border bg-white/[0.04] px-3 py-1.5 text-xs hover:bg-white/[0.08]"
           >
-            Admin
+            Operator
           </Link>
           <button
             onClick={signOut}
@@ -111,7 +142,7 @@ function KitchenPage() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6">
-        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-3">
           {columns.map((col) => {
             const colOrders = orders.filter((o) => o.status === col.key);
             return (
@@ -120,13 +151,17 @@ function KitchenPage() {
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                     {col.label}
                   </h2>
-                  <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px]">
-                    {colOrders.length}
-                  </span>
+                  <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px]">{colOrders.length}</span>
                 </div>
                 <AnimatePresence>
+                  {colOrders.length === 0 && (
+                    <p className="rounded-2xl border border-glass-border bg-white/[0.02] p-6 text-center text-[11px] text-muted-foreground">
+                      No orders here.
+                    </p>
+                  )}
                   {colOrders.map((o) => {
                     const orderItems = items.filter((i) => i.order_id === o.id);
+                    const serial = o.serial_number ?? `S${o.order_number}`;
                     return (
                       <motion.div
                         key={o.id}
@@ -137,22 +172,30 @@ function KitchenPage() {
                         className={`rounded-2xl border p-3 ${
                           col.key === "ready"
                             ? "border-success/40 bg-success/10 shadow-glow"
-                            : "border-glass-border bg-[var(--gradient-card)]"
+                            : col.key === "received"
+                              ? "border-primary/40 bg-primary/5"
+                              : "border-glass-border bg-[var(--gradient-card)]"
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <p className="text-2xl font-bold">#{o.order_number}</p>
-                          <span className="text-[11px] text-muted-foreground">
+                          <p className="text-3xl font-black text-gradient-primary">{serial}</p>
+                          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <Clock className="h-3 w-3" />
                             {relativeTime(o.created_at)}
                           </span>
                         </div>
                         <p className="text-[11px] text-muted-foreground">
-                          {o.table_label ?? "—"} · {formatCurrency(Number(o.total))}
+                          {formatCurrency(Number(o.total))}
                         </p>
                         <ul className="mt-2 space-y-1 text-sm">
                           {orderItems.map((it) => (
                             <li key={it.id}>
                               <span className="font-semibold">{it.qty}×</span> {it.name_snapshot}
+                              {it.special_instructions && (
+                                <span className="ml-1 italic text-[11px] text-muted-foreground">
+                                  "{it.special_instructions}"
+                                </span>
+                              )}
                             </li>
                           ))}
                         </ul>
@@ -165,12 +208,10 @@ function KitchenPage() {
                           }`}
                         >
                           {col.key === "ready" ? (
-                            <>
-                              <Bell className="h-3 w-3" /> Picked up
-                            </>
+                            <><Bell className="h-3 w-3" /> Picked up</>
                           ) : (
                             <>
-                              Next: {STATUS_LABELS[KITCHEN_STATUS_FLOW[KITCHEN_STATUS_FLOW.indexOf(o.status) + 1]]}{" "}
+                              Next: {STATUS_LABELS[KITCHEN_STATUS_FLOW[KITCHEN_STATUS_FLOW.indexOf(o.status) + 1]]}
                               <ChevronRight className="h-3 w-3" />
                             </>
                           )}

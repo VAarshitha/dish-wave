@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ChevronLeft, ShoppingBag } from "lucide-react";
 import { useCart, cartTotal } from "@/lib/cart";
@@ -15,19 +15,21 @@ export function AppHeader({
   showCart?: boolean;
 }) {
   const cart = useCart();
+  const router = useRouter();
   const count = cart.lines.reduce((s, l) => s + l.qty, 0);
   const total = cartTotal(cart.lines);
   return (
     <header className="sticky top-0 z-30 glass-strong">
       <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
         {backTo ? (
-          <Link
-            to={backTo}
+          <button
+            type="button"
+            onClick={() => router.navigate({ to: backTo })}
             className="-ml-2 inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/5"
             aria-label="Back"
           >
             <ChevronLeft className="h-5 w-5" />
-          </Link>
+          </button>
         ) : null}
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-base font-semibold leading-tight">{title}</h1>
