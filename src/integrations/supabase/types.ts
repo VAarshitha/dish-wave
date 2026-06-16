@@ -269,19 +269,15 @@ export type Database = {
           id: string
           notes: string | null
           order_number: number
-          payment_status: Database["public"]["Enums"]["payment_status"]
-          payment_submitted_at: string | null
-          payment_verified_at: string | null
           ready_at: string | null
           restaurant_id: string
+          serial_date: string
+          serial_number: string | null
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
-          table_id: string | null
-          table_label: string | null
           tax: number
           total: number
           updated_at: string
-          upi_txn_ref: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -291,19 +287,15 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: number
-          payment_status?: Database["public"]["Enums"]["payment_status"]
-          payment_submitted_at?: string | null
-          payment_verified_at?: string | null
           ready_at?: string | null
           restaurant_id: string
+          serial_date?: string
+          serial_number?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
-          table_id?: string | null
-          table_label?: string | null
           tax?: number
           total?: number
           updated_at?: string
-          upi_txn_ref?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -313,19 +305,15 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: number
-          payment_status?: Database["public"]["Enums"]["payment_status"]
-          payment_submitted_at?: string | null
-          payment_verified_at?: string | null
           ready_at?: string | null
           restaurant_id?: string
+          serial_date?: string
+          serial_number?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
-          table_id?: string | null
-          table_label?: string | null
           tax?: number
           total?: number
           updated_at?: string
-          upi_txn_ref?: string | null
         }
         Relationships: [
           {
@@ -333,13 +321,6 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_table_id_fkey"
-            columns: ["table_id"]
-            isOneToOne: false
-            referencedRelation: "restaurant_tables"
             referencedColumns: ["id"]
           },
         ]
@@ -368,41 +349,6 @@ export type Database = {
         }
         Relationships: []
       }
-      restaurant_tables: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          label: string
-          qr_token: string
-          restaurant_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          label: string
-          qr_token: string
-          restaurant_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          label?: string
-          qr_token?: string
-          restaurant_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "restaurant_tables_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       restaurants: {
         Row: {
           cover_url: string | null
@@ -417,8 +363,6 @@ export type Database = {
           slug: string
           tagline: string | null
           updated_at: string
-          upi_id: string | null
-          upi_payee_name: string | null
         }
         Insert: {
           cover_url?: string | null
@@ -433,8 +377,6 @@ export type Database = {
           slug: string
           tagline?: string | null
           updated_at?: string
-          upi_id?: string | null
-          upi_payee_name?: string | null
         }
         Update: {
           cover_url?: string | null
@@ -449,8 +391,6 @@ export type Database = {
           slug?: string
           tagline?: string | null
           updated_at?: string
-          upi_id?: string | null
-          upi_payee_name?: string | null
         }
         Relationships: []
       }
@@ -488,6 +428,21 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      place_order: {
+        Args: {
+          _items: Json
+          _notes: string
+          _restaurant_id: string
+          _subtotal: number
+          _tax: number
+          _total: number
+        }
+        Returns: {
+          id: string
+          serial_date: string
+          serial_number: string
+        }[]
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "kitchen"
@@ -501,7 +456,7 @@ export type Database = {
         | "ready"
         | "completed"
         | "cancelled"
-      payment_status: "pending" | "submitted" | "verified" | "failed"
+        | "received"
       spice_level: "none" | "mild" | "medium" | "spicy" | "extra_spicy"
     }
     CompositeTypes: {
@@ -641,8 +596,8 @@ export const Constants = {
         "ready",
         "completed",
         "cancelled",
+        "received",
       ],
-      payment_status: ["pending", "submitted", "verified", "failed"],
       spice_level: ["none", "mild", "medium", "spicy", "extra_spicy"],
     },
   },
