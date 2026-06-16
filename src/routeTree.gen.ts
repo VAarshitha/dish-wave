@@ -14,13 +14,10 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TQrRouteImport } from './routes/t.$qr'
-import { Route as PayOrderIdRouteImport } from './routes/pay.$orderId'
 import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as AuthenticatedKitchenRouteImport } from './routes/_authenticated/kitchen'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminMenuRouteImport } from './routes/_authenticated/admin.menu'
 
 const MenuRoute = MenuRouteImport.update({
@@ -47,16 +44,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TQrRoute = TQrRouteImport.update({
-  id: '/t/$qr',
-  path: '/t/$qr',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PayOrderIdRoute = PayOrderIdRouteImport.update({
-  id: '/pay/$orderId',
-  path: '/pay/$orderId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OrderOrderIdRoute = OrderOrderIdRouteImport.update({
   id: '/order/$orderId',
   path: '/order/$orderId',
@@ -77,12 +64,6 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
-const AuthenticatedAdminSettingsRoute =
-  AuthenticatedAdminSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
 const AuthenticatedAdminMenuRoute = AuthenticatedAdminMenuRouteImport.update({
   id: '/menu',
   path: '/menu',
@@ -97,10 +78,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/kitchen': typeof AuthenticatedKitchenRoute
   '/order/$orderId': typeof OrderOrderIdRoute
-  '/pay/$orderId': typeof PayOrderIdRoute
-  '/t/$qr': typeof TQrRoute
   '/admin/menu': typeof AuthenticatedAdminMenuRoute
-  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -110,10 +88,7 @@ export interface FileRoutesByTo {
   '/menu': typeof MenuRoute
   '/kitchen': typeof AuthenticatedKitchenRoute
   '/order/$orderId': typeof OrderOrderIdRoute
-  '/pay/$orderId': typeof PayOrderIdRoute
-  '/t/$qr': typeof TQrRoute
   '/admin/menu': typeof AuthenticatedAdminMenuRoute
-  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -126,10 +101,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/kitchen': typeof AuthenticatedKitchenRoute
   '/order/$orderId': typeof OrderOrderIdRoute
-  '/pay/$orderId': typeof PayOrderIdRoute
-  '/t/$qr': typeof TQrRoute
   '/_authenticated/admin/menu': typeof AuthenticatedAdminMenuRoute
-  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -142,10 +114,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/kitchen'
     | '/order/$orderId'
-    | '/pay/$orderId'
-    | '/t/$qr'
     | '/admin/menu'
-    | '/admin/settings'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -155,10 +124,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/kitchen'
     | '/order/$orderId'
-    | '/pay/$orderId'
-    | '/t/$qr'
     | '/admin/menu'
-    | '/admin/settings'
     | '/admin'
   id:
     | '__root__'
@@ -170,10 +136,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/kitchen'
     | '/order/$orderId'
-    | '/pay/$orderId'
-    | '/t/$qr'
     | '/_authenticated/admin/menu'
-    | '/_authenticated/admin/settings'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -184,8 +147,6 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   MenuRoute: typeof MenuRoute
   OrderOrderIdRoute: typeof OrderOrderIdRoute
-  PayOrderIdRoute: typeof PayOrderIdRoute
-  TQrRoute: typeof TQrRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -225,20 +186,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/t/$qr': {
-      id: '/t/$qr'
-      path: '/t/$qr'
-      fullPath: '/t/$qr'
-      preLoaderRoute: typeof TQrRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pay/$orderId': {
-      id: '/pay/$orderId'
-      path: '/pay/$orderId'
-      fullPath: '/pay/$orderId'
-      preLoaderRoute: typeof PayOrderIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/order/$orderId': {
       id: '/order/$orderId'
       path: '/order/$orderId'
@@ -267,13 +214,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/settings': {
-      id: '/_authenticated/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
     '/_authenticated/admin/menu': {
       id: '/_authenticated/admin/menu'
       path: '/menu'
@@ -286,13 +226,11 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMenuRoute: typeof AuthenticatedAdminMenuRoute
-  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMenuRoute: AuthenticatedAdminMenuRoute,
-  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
@@ -319,8 +257,6 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   MenuRoute: MenuRoute,
   OrderOrderIdRoute: OrderOrderIdRoute,
-  PayOrderIdRoute: PayOrderIdRoute,
-  TQrRoute: TQrRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
