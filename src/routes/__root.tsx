@@ -77,14 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "QR  Order" },
+      { name: "description", content: "A premium QR-based restaurant ordering platform for self-pickup orders." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "QR  Order" },
+      { property: "og:description", content: "A premium QR-based restaurant ordering platform for self-pickup orders." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "QR  Order" },
+      { name: "twitter:description", content: "A premium QR-based restaurant ordering platform for self-pickup orders." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e7948c24-02ed-4a98-aab4-da2f3bdbcde4/id-preview-a37006ac--3f22d2b2-6cc9-4800-96b1-b0799a4cd4e1.lovable.app-1781678362233.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e7948c24-02ed-4a98-aab4-da2f3bdbcde4/id-preview-a37006ac--3f22d2b2-6cc9-4800-96b1-b0799a4cd4e1.lovable.app-1781678362233.png" },
     ],
     links: [
       {
