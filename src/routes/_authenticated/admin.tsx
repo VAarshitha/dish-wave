@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, UtensilsCrossed, ChefHat, LogOut } from "lucide-react";
+import { LayoutDashboard, UtensilsCrossed, Users, ChefHat, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -12,6 +12,7 @@ function AdminShell() {
   const tabs: ReadonlyArray<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
     { to: "/admin", label: "Orders", icon: LayoutDashboard, exact: true },
     { to: "/admin/menu", label: "Menu", icon: UtensilsCrossed },
+    { to: "/admin/staff", label: "Kitchen Staff", icon: Users },
   ];
 
   async function signOut() {
