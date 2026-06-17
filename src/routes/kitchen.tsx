@@ -1,16 +1,153 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ChevronRight, ChefHat, LogOut, Clock } from "lucide-react";
+import { Bell, ChevronRight, ChefHat, LogOut, Clock, Lock, Delete } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { KITCHEN_STATUS_FLOW, STATUS_LABELS, type OrderStatus } from "@/lib/orders.queries";
+import { restaurantQuery } from "@/lib/menu.queries";
 import { formatCurrency, relativeTime } from "@/lib/format";
+import {
+  getKitchenSession,
+  kitchenLogin,
+  kitchenLogout,
+  kitchenSetStatus,
+} from "@/lib/kitchen";
 
-export const Route = createFileRoute("/_authenticated/kitchen")({
-  head: () => ({ meta: [{ title: "Kitchen — Albaik" }] }),
-  component: KitchenPage,
+export const Route = createFileRoute("/kitchen")({
+  ssr: false,
+  head: () => ({ meta: [{ title: "Kitchen Display — Albaik" }] }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(restaurantQuery),
+  component: KitchenRoute,
+  errorComponent: ({ error }) => (
+    <div className="p-8 text-sm text-destructive">{error.message}</div>
+  ),
 });
+
+function KitchenRoute() {
+  const { data: restaurant } = useSuspenseQuery(restaurantQuery);
+  const [session, setSession] = useState(() => getKitchenSession());
+
+  if (!session) {
+    return <PinGate restaurantId={restaurant.id} onAuthed={() => setSession(getKitchenSession())} />;
+  }
+  return <KitchenDashboard staffName={session.staffName} onSignOut={async () => {
+    await kitchenLogout();
+    setSession(null);
+  }} />;
+}
+
+// ============ PIN gate ============
+
+function PinGate({ restaurantId, onAuthed }: { restaurantId: string; onAuthed: () => void }) {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(p: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      await kitchenLogin(restaurantId, p);
+      onAuthed();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Invalid PIN");
+      setPin("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function press(k: string) {
+    if (busy) return;
+    setError(null);
+    if (k === "del") {
+      setPin((p) => p.slice(0, -1));
+      return;
+    }
+    setPin((p) => {
+      const next = (p + k).slice(0, 6);
+      if (next.length >= 4 && k !== "del") {
+        // auto-submit when 4+ digits and user presses one more then enter? Just submit on 6 or on Enter.
+      }
+      return next;
+    });
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-sm rounded-3xl border border-glass-border bg-[var(--gradient-card)] p-8 shadow-elevated">
+        <div className="flex flex-col items-center text-center">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl gradient-primary-bg text-primary-foreground shadow-glow">
+            <Lock className="h-5 w-5" />
+          </span>
+          <h1 className="mt-4 text-xl font-bold">Kitchen Sign In</h1>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Enter your 4–6 digit PIN to unlock the kitchen display.
+          </p>
+        </div>
+
+        <div className="mt-6 flex justify-center gap-2" aria-label="PIN entry">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <span
+              key={i}
+              className={`h-3.5 w-3.5 rounded-full transition ${
+                i < pin.length ? "bg-primary" : "bg-white/10"
+              }`}
+            />
+          ))}
+        </div>
+
+        {error && (
+          <p className="mt-3 text-center text-xs font-medium text-destructive">{error}</p>
+        )}
+
+        <div className="mt-6 grid grid-cols-3 gap-2">
+          {["1","2","3","4","5","6","7","8","9"].map((k) => (
+            <KeyButton key={k} label={k} onClick={() => press(k)} />
+          ))}
+          <KeyButton label="Clear" onClick={() => setPin("")} variant="ghost" />
+          <KeyButton label="0" onClick={() => press("0")} />
+          <KeyButton label={<Delete className="mx-auto h-4 w-4" />} onClick={() => press("del")} variant="ghost" />
+        </div>
+
+        <button
+          onClick={() => submit(pin)}
+          disabled={pin.length < 4 || busy}
+          className="mt-5 inline-flex w-full items-center justify-center rounded-full gradient-primary-bg px-6 py-3 text-sm font-bold text-primary-foreground shadow-glow transition disabled:opacity-50"
+        >
+          {busy ? "Verifying…" : "Unlock"}
+        </button>
+
+        <p className="mt-4 text-center text-[11px] text-muted-foreground">
+          Forgot your PIN? Ask the manager to reset it.
+        </p>
+        <div className="mt-4 text-center">
+          <Link to="/" className="text-[11px] text-muted-foreground hover:text-foreground">← Back to ordering</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KeyButton({
+  label, onClick, variant = "solid",
+}: { label: React.ReactNode; onClick: () => void; variant?: "solid" | "ghost" }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`h-14 rounded-2xl text-lg font-semibold transition active:scale-95 ${
+        variant === "ghost"
+          ? "border border-glass-border bg-white/[0.02] text-muted-foreground hover:bg-white/[0.05]"
+          : "border border-glass-border bg-white/[0.05] hover:bg-white/[0.08]"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ============ Dashboard ============
 
 type KOrder = {
   id: string;
@@ -19,6 +156,7 @@ type KOrder = {
   total: number;
   status: OrderStatus;
   created_at: string;
+  notes: string | null;
 };
 type KItem = {
   id: string;
@@ -43,19 +181,20 @@ function playDing() {
   } catch { /* noop */ }
 }
 
-function KitchenPage() {
+function KitchenDashboard({ staffName, onSignOut }: { staffName: string; onSignOut: () => void }) {
   const qc = useQueryClient();
   const { data: orders = [] } = useQuery({
     queryKey: ["kitchen", "orders"],
     queryFn: async (): Promise<KOrder[]> => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id,order_number,serial_number,total,status,created_at")
+        .select("id,order_number,serial_number,total,status,created_at,notes")
         .in("status", ["received", "preparing", "ready"])
         .order("created_at");
       if (error) throw error;
       return (data ?? []) as KOrder[];
     },
+    refetchInterval: 5000,
   });
   const orderIds = orders.map((o) => o.id);
   const { data: items = [] } = useQuery({
@@ -72,7 +211,6 @@ function KitchenPage() {
     enabled: orderIds.length > 0,
   });
 
-  // Audible alert on new orders
   const seen = useRef<Set<string>>(new Set());
   useEffect(() => {
     const firstRun = seen.current.size === 0;
@@ -89,9 +227,10 @@ function KitchenPage() {
   useEffect(() => {
     const ch = supabase
       .channel("kitchen-feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () =>
-        qc.invalidateQueries({ queryKey: ["kitchen", "orders"] }),
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+        qc.invalidateQueries({ queryKey: ["kitchen", "orders"] });
+        qc.invalidateQueries({ queryKey: ["kitchen", "items"] });
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [qc]);
@@ -99,16 +238,12 @@ function KitchenPage() {
   async function advance(id: string, status: OrderStatus) {
     const idx = KITCHEN_STATUS_FLOW.indexOf(status);
     const next = KITCHEN_STATUS_FLOW[idx + 1] ?? status;
-    const patch: { status: OrderStatus; ready_at?: string; completed_at?: string } = { status: next };
-    if (next === "ready") patch.ready_at = new Date().toISOString();
-    if (next === "completed") patch.completed_at = new Date().toISOString();
-    await supabase.from("orders").update(patch).eq("id", id);
-    qc.invalidateQueries({ queryKey: ["kitchen", "orders"] });
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut();
-    window.location.href = "/auth";
+    try {
+      await kitchenSetStatus(id, next);
+      qc.invalidateQueries({ queryKey: ["kitchen", "orders"] });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to update order");
+    }
   }
 
   const columns: { key: OrderStatus; label: string }[] = [
@@ -127,15 +262,10 @@ function KitchenPage() {
             </span>
             Kitchen Display
           </span>
-          <Link
-            to="/_authenticated/admin"
-            className="ml-auto rounded-full border border-glass-border bg-white/[0.04] px-3 py-1.5 text-xs hover:bg-white/[0.08]"
-          >
-            Operator
-          </Link>
+          <span className="hidden text-xs text-muted-foreground sm:inline">Signed in as <span className="text-foreground">{staffName}</span></span>
           <button
-            onClick={signOut}
-            className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-white/[0.04] px-3 py-1.5 text-xs hover:bg-white/[0.08]"
+            onClick={onSignOut}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-white/[0.04] px-3 py-1.5 text-xs hover:bg-white/[0.08]"
           >
             <LogOut className="h-3 w-3" /> Sign out
           </button>
@@ -199,6 +329,11 @@ function KitchenPage() {
                             </li>
                           ))}
                         </ul>
+                        {o.notes && (
+                          <p className="mt-2 rounded-lg bg-white/5 px-2 py-1 text-[11px] italic text-muted-foreground">
+                            Note: {o.notes}
+                          </p>
+                        )}
                         <button
                           onClick={() => advance(o.id, o.status)}
                           className={`mt-3 inline-flex w-full items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-semibold ${

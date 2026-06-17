@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, UtensilsCrossed, ChefHat, LogOut } from "lucide-react";
+import { LayoutDashboard, UtensilsCrossed, Users, ChefHat, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -12,6 +12,7 @@ function AdminShell() {
   const tabs: ReadonlyArray<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
     { to: "/admin", label: "Orders", icon: LayoutDashboard, exact: true },
     { to: "/admin/menu", label: "Menu", icon: UtensilsCrossed },
+    { to: "/admin/staff", label: "Kitchen Staff", icon: Users },
   ];
 
   async function signOut() {
@@ -50,7 +51,7 @@ function AdminShell() {
             })}
           </nav>
           <Link
-            to="/_authenticated/kitchen"
+            to="/kitchen"
             className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-white/[0.04] px-3 py-1.5 text-xs hover:bg-white/[0.08]"
           >
             <ChefHat className="h-3 w-3" /> Kitchen
