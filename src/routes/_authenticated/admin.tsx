@@ -51,7 +51,7 @@ function AdminShell() {
             })}
           </nav>
           <Link
-            to="/_authenticated/kitchen"
+            to="/kitchen"
             className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-white/[0.04] px-3 py-1.5 text-xs hover:bg-white/[0.08]"
           >
             <ChefHat className="h-3 w-3" /> Kitchen
