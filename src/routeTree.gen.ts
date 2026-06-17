@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
-import { Route as AuthenticatedKitchenRouteImport } from './routes/_authenticated/kitchen'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminMenuRouteImport } from './routes/_authenticated/admin.menu'
@@ -49,11 +48,6 @@ const OrderOrderIdRoute = OrderOrderIdRouteImport.update({
   path: '/order/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedKitchenRoute = AuthenticatedKitchenRouteImport.update({
-  id: '/kitchen',
-  path: '/kitchen',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -76,7 +70,6 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/menu': typeof MenuRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/kitchen': typeof AuthenticatedKitchenRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/admin/menu': typeof AuthenticatedAdminMenuRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -86,7 +79,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/menu': typeof MenuRoute
-  '/kitchen': typeof AuthenticatedKitchenRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/admin/menu': typeof AuthenticatedAdminMenuRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -99,7 +91,6 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/menu': typeof MenuRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/_authenticated/kitchen': typeof AuthenticatedKitchenRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/_authenticated/admin/menu': typeof AuthenticatedAdminMenuRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -112,7 +103,6 @@ export interface FileRouteTypes {
     | '/cart'
     | '/menu'
     | '/admin'
-    | '/kitchen'
     | '/order/$orderId'
     | '/admin/menu'
     | '/admin/'
@@ -122,7 +112,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cart'
     | '/menu'
-    | '/kitchen'
     | '/order/$orderId'
     | '/admin/menu'
     | '/admin'
@@ -134,7 +123,6 @@ export interface FileRouteTypes {
     | '/cart'
     | '/menu'
     | '/_authenticated/admin'
-    | '/_authenticated/kitchen'
     | '/order/$orderId'
     | '/_authenticated/admin/menu'
     | '/_authenticated/admin/'
@@ -193,13 +181,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/kitchen': {
-      id: '/_authenticated/kitchen'
-      path: '/kitchen'
-      fullPath: '/kitchen'
-      preLoaderRoute: typeof AuthenticatedKitchenRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -239,12 +220,10 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
-  AuthenticatedKitchenRoute: typeof AuthenticatedKitchenRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
-  AuthenticatedKitchenRoute: AuthenticatedKitchenRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
