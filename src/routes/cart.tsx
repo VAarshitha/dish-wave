@@ -163,52 +163,8 @@ function CartPage() {
               </AnimatePresence>
             </div>
 
-            {/* Coupon */}
-            <div className="mt-4 rounded-2xl border border-glass-border bg-white/[0.03] p-3">
-              <div className="flex items-center gap-2">
-                <Tag className="h-3.5 w-3.5 text-primary" />
-                <span className="text-xs font-semibold">Coupon code</span>
-              </div>
-              <div className="mt-2 flex gap-2">
-                <input
-                  value={coupon}
-                  onChange={(e) => setCoupon(e.target.value.toUpperCase())}
-                  placeholder="ALBAIK10"
-                  disabled={!!appliedCoupon}
-                  className="flex-1 rounded-xl border border-glass-border bg-white/[0.04] px-3 py-2 text-xs uppercase tracking-wider placeholder:text-muted-foreground/50 focus:border-primary/50 focus:outline-none disabled:opacity-50"
-                />
-                {appliedCoupon ? (
-                  <button
-                    onClick={() => {
-                      setAppliedCoupon(null);
-                      setCoupon("");
-                    }}
-                    className="inline-flex items-center gap-1 rounded-xl border border-glass-border bg-white/[0.04] px-3 text-[11px] hover:bg-white/[0.08]"
-                  >
-                    <X className="h-3 w-3" /> Remove
-                  </button>
-                ) : (
-                  <button
-                    onClick={applyCoupon}
-                    className="rounded-xl bg-white/10 px-3 text-xs font-semibold hover:bg-white/15"
-                  >
-                    Apply
-                  </button>
-                )}
-              </div>
-              {appliedCoupon && (
-                <p className="mt-2 text-[11px] font-semibold text-success">
-                  ✓ {COUPONS[appliedCoupon].label}
-                </p>
-              )}
-            </div>
-
             {/* Totals */}
             <div className="mt-4 rounded-2xl border border-glass-border bg-white/[0.03] p-4">
-              <Row label="Subtotal" value={formatCurrency(subtotal, restaurant.currency_symbol)} />
-              {discount > 0 && <Row label={`Discount (${appliedCoupon})`} value={`− ${formatCurrency(discount, restaurant.currency_symbol)}`} success />}
-              <Row label="GST (5%)" value={formatCurrency(tax, restaurant.currency_symbol)} />
-              <div className="my-2 border-t border-glass-border" />
               <Row label="Total" value={formatCurrency(total, restaurant.currency_symbol)} bold />
             </div>
 
@@ -216,8 +172,7 @@ function CartPage() {
             <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-glass-border bg-white/[0.03] px-3.5 py-2.5">
               <Wallet className="mt-0.5 h-4 w-4 flex-none text-primary" />
               <div className="text-[11px] leading-relaxed text-muted-foreground">
-                <span className="font-semibold text-foreground">Pay at the counter.</span> Once you place
-                the order you'll get a serial number — show it at the billing counter to pay and collect.
+                <span className="font-semibold text-foreground">Pay at the counter.</span> You'll get a serial number after placing your order.
               </div>
             </div>
 
