@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Flame, Plus, Sparkles, Trophy, Clock } from "lucide-react";
+import { Plus, Sparkles, Trophy } from "lucide-react";
 import { VegBadge } from "./VegBadge";
 import type { MenuItem } from "@/lib/menu.queries";
 import { formatCurrency } from "@/lib/format";
@@ -55,20 +55,11 @@ export function ItemCard({
               <Sparkles className="h-2.5 w-2.5" /> Chef
             </span>
           )}
-          {item.spice_level === "spicy" || item.spice_level === "extra_spicy" ? (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-destructive/15 px-1.5 py-0.5 font-medium text-destructive">
-              <Flame className="h-2.5 w-2.5" />
-              {item.spice_level === "extra_spicy" ? "Hot" : "Spicy"}
-            </span>
-          ) : null}
           {item.is_new && (
             <span className="rounded-full bg-primary/15 px-1.5 py-0.5 font-medium text-primary">
               New
             </span>
           )}
-          <span className="inline-flex items-center gap-0.5">
-            <Clock className="h-2.5 w-2.5" /> {item.prep_time_min} min
-          </span>
         </div>
         <div className="mt-2.5 flex items-center justify-between">
           <span className="text-[17px] font-bold tracking-tight">

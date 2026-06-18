@@ -1,20 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { Minus, Plus, X, Flame, Clock, Leaf, Drumstick } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import type { MenuItem } from "@/lib/menu.queries";
 import { addonsForItemQuery } from "@/lib/menu.queries";
 import { addToCart, type CartAddon } from "@/lib/cart";
 import { formatCurrency } from "@/lib/format";
 import { VegBadge } from "./VegBadge";
-
-const SPICE_DOTS: Record<string, { dots: number; label: string }> = {
-  none: { dots: 0, label: "No spice" },
-  mild: { dots: 1, label: "Mild" },
-  medium: { dots: 2, label: "Medium" },
-  spicy: { dots: 3, label: "Spicy" },
-  extra_spicy: { dots: 4, label: "Extra hot" },
-};
 
 export function ItemSheet({
   item,
@@ -27,13 +19,11 @@ export function ItemSheet({
 }) {
   const [qty, setQty] = useState(1);
   const [addons, setAddons] = useState<CartAddon[]>([]);
-  const [notes, setNotes] = useState("");
 
   useEffect(() => {
     if (open) {
       setQty(1);
       setAddons([]);
-      setNotes("");
     }
   }, [open, item?.id]);
 
@@ -73,13 +63,10 @@ export function ItemSheet({
       imageUrl: item.image_url,
       qty,
       addons,
-      specialInstructions: notes || undefined,
     });
     try { navigator.vibrate?.(12); } catch { /* noop */ }
     onClose();
   }
-
-  const spice = item ? SPICE_DOTS[item.spice_level] ?? SPICE_DOTS.none : null;
 
   return (
     <AnimatePresence>
@@ -150,52 +137,6 @@ export function ItemSheet({
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
               )}
 
-              {/* Stat cards row */}
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <StatCard
-                  icon={<Clock className="h-3.5 w-3.5" />}
-                  label="Prep time"
-                  value={`${item.prep_time_min} min`}
-                />
-                {item.calories ? (
-                  <StatCard
-                    icon={<Flame className="h-3.5 w-3.5" />}
-                    label="Calories"
-                    value={`${item.calories} kcal`}
-                  />
-                ) : (
-                  <StatCard
-                    icon={item.is_veg ? <Leaf className="h-3.5 w-3.5" /> : <Drumstick className="h-3.5 w-3.5" />}
-                    label="Type"
-                    value={item.is_veg ? "Vegetarian" : "Non-veg"}
-                  />
-                )}
-                {spice && spice.dots > 0 ? (
-                  <StatCard
-                    icon={<Flame className="h-3.5 w-3.5 text-destructive" />}
-                    label="Spice"
-                    value={
-                      <span className="inline-flex items-center gap-0.5">
-                        {Array.from({ length: 4 }).map((_, i) => (
-                          <span
-                            key={i}
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              i < spice.dots ? "bg-destructive" : "bg-white/15"
-                            }`}
-                          />
-                        ))}
-                      </span>
-                    }
-                  />
-                ) : (
-                  <StatCard
-                    icon={<Leaf className="h-3.5 w-3.5 text-success" />}
-                    label="Spice"
-                    value="None"
-                  />
-                )}
-              </div>
-
               {item.tags?.length ? (
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {item.tags.slice(0, 6).map((t) => (
@@ -249,18 +190,6 @@ export function ItemSheet({
                 </div>
               ) : null}
 
-              <div className="mt-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Special instructions
-                </h3>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={2}
-                  placeholder="e.g. extra crispy, no onion"
-                  className="mt-2 w-full resize-none rounded-2xl border border-glass-border bg-white/[0.03] p-3 text-sm placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/15"
-                />
-              </div>
             </div>
 
             {/* Footer */}
@@ -316,22 +245,3 @@ export function ItemSheet({
   );
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-glass-border bg-white/[0.03] px-2.5 py-2">
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-        {icon}
-        <span>{label}</span>
-      </div>
-      <div className="mt-1 text-[13px] font-semibold leading-tight">{value}</div>
-    </div>
-  );
-}
