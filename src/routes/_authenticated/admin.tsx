@@ -1,9 +1,19 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, UtensilsCrossed, Users, ChefHat, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
+const ADMIN_EMAIL = "sadhalanikhilroyal17@gmail.com";
+
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin — Albaik" }] }),
+  head: () => ({ meta: [{ title: "Admin — Albaik Madanapalle" }] }),
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    const email = data.user?.email?.toLowerCase();
+    if (email !== ADMIN_EMAIL) {
+      await supabase.auth.signOut();
+      throw redirect({ to: "/auth" });
+    }
+  },
   component: AdminShell,
 });
 
