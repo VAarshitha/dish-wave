@@ -16,7 +16,7 @@ import {
 
 export const Route = createFileRoute("/kitchen")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Kitchen Display — Albaik" }] }),
+  head: () => ({ meta: [{ title: "Kitchen Display — Albaik Madanapalle" }] }),
   loader: ({ context }) => context.queryClient.ensureQueryData(restaurantQuery),
   component: KitchenRoute,
   errorComponent: ({ error }) => (
@@ -31,10 +31,15 @@ function KitchenRoute() {
   if (!session) {
     return <PinGate restaurantId={restaurant.id} onAuthed={() => setSession(getKitchenSession())} />;
   }
-  return <KitchenDashboard staffName={session.staffName} onSignOut={async () => {
-    await kitchenLogout();
-    setSession(null);
-  }} />;
+  return (
+    <KitchenDashboard
+      staffName={session.staffName}
+      onSignOut={async () => {
+        await kitchenLogout();
+        setSession(null);
+      }}
+    />
+  );
 }
 
 // ============ PIN gate ============
@@ -65,13 +70,7 @@ function PinGate({ restaurantId, onAuthed }: { restaurantId: string; onAuthed: (
       setPin((p) => p.slice(0, -1));
       return;
     }
-    setPin((p) => {
-      const next = (p + k).slice(0, 6);
-      if (next.length >= 4 && k !== "del") {
-        // auto-submit when 4+ digits and user presses one more then enter? Just submit on 6 or on Enter.
-      }
-      return next;
-    });
+    setPin((p) => (p + k).slice(0, 6));
   }
 
   return (
@@ -82,9 +81,7 @@ function PinGate({ restaurantId, onAuthed }: { restaurantId: string; onAuthed: (
             <Lock className="h-5 w-5" />
           </span>
           <h1 className="mt-4 text-xl font-bold">Kitchen Sign In</h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Enter your 4–6 digit PIN to unlock the kitchen display.
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Enter your PIN to unlock the kitchen display.</p>
         </div>
 
         <div className="mt-6 flex justify-center gap-2" aria-label="PIN entry">
@@ -119,9 +116,6 @@ function PinGate({ restaurantId, onAuthed }: { restaurantId: string; onAuthed: (
           {busy ? "Verifying…" : "Unlock"}
         </button>
 
-        <p className="mt-4 text-center text-[11px] text-muted-foreground">
-          Forgot your PIN? Ask the manager to reset it.
-        </p>
         <div className="mt-4 text-center">
           <Link to="/" className="text-[11px] text-muted-foreground hover:text-foreground">← Back to ordering</Link>
         </div>
@@ -156,14 +150,12 @@ type KOrder = {
   total: number;
   status: OrderStatus;
   created_at: string;
-  notes: string | null;
 };
 type KItem = {
   id: string;
   order_id: string;
   name_snapshot: string;
   qty: number;
-  special_instructions: string | null;
 };
 
 function playDing() {
@@ -188,7 +180,7 @@ function KitchenDashboard({ staffName, onSignOut }: { staffName: string; onSignO
     queryFn: async (): Promise<KOrder[]> => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id,order_number,serial_number,total,status,created_at,notes")
+        .select("id,order_number,serial_number,total,status,created_at")
         .in("status", ["received", "preparing", "ready"])
         .order("created_at");
       if (error) throw error;
@@ -203,7 +195,7 @@ function KitchenDashboard({ staffName, onSignOut }: { staffName: string; onSignO
       if (orderIds.length === 0) return [];
       const { data, error } = await supabase
         .from("order_items")
-        .select("id,order_id,name_snapshot,qty,special_instructions")
+        .select("id,order_id,name_snapshot,qty")
         .in("order_id", orderIds);
       if (error) throw error;
       return (data ?? []) as KItem[];
@@ -246,23 +238,19 @@ function KitchenDashboard({ staffName, onSignOut }: { staffName: string; onSignO
     }
   }
 
-  const columns: { key: OrderStatus; label: string }[] = [
-    { key: "received", label: "New" },
-    { key: "preparing", label: "Preparing" },
-    { key: "ready", label: "Ready" },
-  ];
-
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 glass-strong">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
           <span className="inline-flex items-center gap-2 text-sm font-semibold">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg gradient-primary-bg text-primary-foreground">
               <ChefHat className="h-4 w-4" />
             </span>
-            Kitchen Display
+            Kitchen — Albaik Madanapalle
           </span>
-          <span className="hidden text-xs text-muted-foreground sm:inline">Signed in as <span className="text-foreground">{staffName}</span></span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            Signed in as <span className="text-foreground">{staffName}</span>
+          </span>
           <button
             onClick={onSignOut}
             className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-white/[0.04] px-3 py-1.5 text-xs hover:bg-white/[0.08]"
@@ -271,93 +259,77 @@ function KitchenDashboard({ staffName, onSignOut }: { staffName: string; onSignO
           </button>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6">
-        <div className="grid gap-4 md:grid-cols-3">
-          {columns.map((col) => {
-            const colOrders = orders.filter((o) => o.status === col.key);
-            return (
-              <div key={col.key} className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                    {col.label}
-                  </h2>
-                  <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px]">{colOrders.length}</span>
-                </div>
-                <AnimatePresence>
-                  {colOrders.length === 0 && (
-                    <p className="rounded-2xl border border-glass-border bg-white/[0.02] p-6 text-center text-[11px] text-muted-foreground">
-                      No orders here.
+      <main className="mx-auto max-w-5xl px-4 py-6">
+        <div className="mb-4 flex items-end justify-between">
+          <h1 className="text-xl font-bold tracking-tight">Active orders</h1>
+          <span className="rounded-full bg-white/5 px-3 py-1 text-xs">{orders.length} pending</span>
+        </div>
+        <div className="grid gap-3">
+          <AnimatePresence>
+            {orders.length === 0 && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-2xl border border-glass-border bg-white/[0.02] p-10 text-center text-sm text-muted-foreground"
+              >
+                No active orders. New orders will appear here automatically.
+              </motion.p>
+            )}
+            {orders.map((o) => {
+              const orderItems = items.filter((i) => i.order_id === o.id);
+              const serial = o.serial_number ?? `S${o.order_number}`;
+              const nextStatus = KITCHEN_STATUS_FLOW[KITCHEN_STATUS_FLOW.indexOf(o.status) + 1];
+              const isReady = o.status === "ready";
+              return (
+                <motion.div
+                  key={o.id}
+                  layout
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className={`grid gap-3 rounded-2xl border p-4 md:grid-cols-[auto_1fr_auto] md:items-center ${
+                    isReady
+                      ? "border-success/40 bg-success/10 shadow-glow"
+                      : o.status === "received"
+                        ? "border-primary/40 bg-primary/5"
+                        : "border-glass-border bg-[var(--gradient-card)]"
+                  }`}
+                >
+                  <div className="md:min-w-[7rem]">
+                    <p className="text-4xl font-black leading-none text-gradient-primary">{serial}</p>
+                    <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {relativeTime(o.created_at)}
                     </p>
-                  )}
-                  {colOrders.map((o) => {
-                    const orderItems = items.filter((i) => i.order_id === o.id);
-                    const serial = o.serial_number ?? `S${o.order_number}`;
-                    return (
-                      <motion.div
-                        key={o.id}
-                        layout
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className={`rounded-2xl border p-3 ${
-                          col.key === "ready"
-                            ? "border-success/40 bg-success/10 shadow-glow"
-                            : col.key === "received"
-                              ? "border-primary/40 bg-primary/5"
-                              : "border-glass-border bg-[var(--gradient-card)]"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-3xl font-black text-gradient-primary">{serial}</p>
-                          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {relativeTime(o.created_at)}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">
-                          {formatCurrency(Number(o.total))}
-                        </p>
-                        <ul className="mt-2 space-y-1 text-sm">
-                          {orderItems.map((it) => (
-                            <li key={it.id}>
-                              <span className="font-semibold">{it.qty}×</span> {it.name_snapshot}
-                              {it.special_instructions && (
-                                <span className="ml-1 italic text-[11px] text-muted-foreground">
-                                  "{it.special_instructions}"
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                        {o.notes && (
-                          <p className="mt-2 rounded-lg bg-white/5 px-2 py-1 text-[11px] italic text-muted-foreground">
-                            Note: {o.notes}
-                          </p>
-                        )}
-                        <button
-                          onClick={() => advance(o.id, o.status)}
-                          className={`mt-3 inline-flex w-full items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-semibold ${
-                            col.key === "ready"
-                              ? "gradient-success-bg text-success-foreground"
-                              : "gradient-primary-bg text-primary-foreground shadow-glow"
-                          }`}
-                        >
-                          {col.key === "ready" ? (
-                            <><Bell className="h-3 w-3" /> Picked up</>
-                          ) : (
-                            <>
-                              Next: {STATUS_LABELS[KITCHEN_STATUS_FLOW[KITCHEN_STATUS_FLOW.indexOf(o.status) + 1]]}
-                              <ChevronRight className="h-3 w-3" />
-                            </>
-                          )}
-                        </button>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+                  </div>
+                  <ul className="space-y-1 text-sm">
+                    {orderItems.map((it) => (
+                      <li key={it.id}>
+                        <span className="font-semibold tabular-nums">{it.qty}×</span> {it.name_snapshot}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex items-center justify-between gap-3 md:flex-col md:items-end">
+                    <p className="text-base font-bold tabular-nums">{formatCurrency(Number(o.total))}</p>
+                    <button
+                      onClick={() => advance(o.id, o.status)}
+                      className={`inline-flex items-center justify-center gap-1 rounded-full px-4 py-2 text-xs font-semibold ${
+                        isReady
+                          ? "gradient-success-bg text-success-foreground"
+                          : "gradient-primary-bg text-primary-foreground shadow-glow"
+                      }`}
+                    >
+                      {isReady ? (
+                        <><Bell className="h-3 w-3" /> Picked up</>
+                      ) : (
+                        <>Mark {STATUS_LABELS[nextStatus]} <ChevronRight className="h-3 w-3" /></>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       </main>
     </div>
