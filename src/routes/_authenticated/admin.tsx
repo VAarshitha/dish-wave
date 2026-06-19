@@ -1,45 +1,34 @@
-import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, UtensilsCrossed, Users, ChefHat, LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-
-const ADMIN_EMAIL = "sadhalanikhilroyal17@gmail.com";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { LayoutDashboard, UtensilsCrossed, ChefHat, LogOut } from "lucide-react";
+import logo from "@/assets/albaik-logo.png";
+import { signOut } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Albaik Madanapalle" }] }),
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    const email = data.user?.email?.toLowerCase();
-    if (email !== ADMIN_EMAIL) {
-      await supabase.auth.signOut();
-      throw redirect({ to: "/auth" });
-    }
-  },
   component: AdminShell,
 });
 
 function AdminShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const tabs: ReadonlyArray<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
     { to: "/admin", label: "Orders", icon: LayoutDashboard, exact: true },
     { to: "/admin/menu", label: "Menu", icon: UtensilsCrossed },
-    { to: "/admin/staff", label: "Kitchen Staff", icon: Users },
   ];
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    window.location.href = "/auth";
+  function handleSignOut() {
+    signOut();
+    navigate({ to: "/auth" });
   }
 
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 glass-strong">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg gradient-primary-bg text-primary-foreground">
-              <LayoutDashboard className="h-4 w-4" />
-            </span>
-            Operator
-          </span>
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold">
+            <img src={logo} alt="Albaik" width={28} height={28} className="h-7 w-7 rounded-lg" />
+            Admin
+          </Link>
           <nav className="ml-2 flex gap-1">
             {tabs.map((t) => {
               const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
@@ -67,7 +56,7 @@ function AdminShell() {
             <ChefHat className="h-3 w-3" /> Kitchen
           </Link>
           <button
-            onClick={signOut}
+            onClick={handleSignOut}
             className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-white/[0.04] px-3 py-1.5 text-xs hover:bg-white/[0.08]"
           >
             <LogOut className="h-3 w-3" /> Sign out
