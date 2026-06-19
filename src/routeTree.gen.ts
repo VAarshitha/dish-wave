@@ -18,7 +18,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin.staff'
 import { Route as AuthenticatedAdminMenuRouteImport } from './routes/_authenticated/admin.menu'
 
 const MenuRoute = MenuRouteImport.update({
@@ -65,11 +64,6 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
-const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
 const AuthenticatedAdminMenuRoute = AuthenticatedAdminMenuRouteImport.update({
   id: '/menu',
   path: '/menu',
@@ -85,7 +79,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/order/$orderId': typeof OrderOrderIdRoute
   '/admin/menu': typeof AuthenticatedAdminMenuRoute
-  '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -96,7 +89,6 @@ export interface FileRoutesByTo {
   '/menu': typeof MenuRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/admin/menu': typeof AuthenticatedAdminMenuRoute
-  '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -110,7 +102,6 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/order/$orderId': typeof OrderOrderIdRoute
   '/_authenticated/admin/menu': typeof AuthenticatedAdminMenuRoute
-  '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -124,7 +115,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/order/$orderId'
     | '/admin/menu'
-    | '/admin/staff'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -135,7 +125,6 @@ export interface FileRouteTypes {
     | '/menu'
     | '/order/$orderId'
     | '/admin/menu'
-    | '/admin/staff'
     | '/admin'
   id:
     | '__root__'
@@ -148,7 +137,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/order/$orderId'
     | '/_authenticated/admin/menu'
-    | '/_authenticated/admin/staff'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -227,13 +215,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/staff': {
-      id: '/_authenticated/admin/staff'
-      path: '/staff'
-      fullPath: '/admin/staff'
-      preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
     '/_authenticated/admin/menu': {
       id: '/_authenticated/admin/menu'
       path: '/menu'
@@ -246,13 +227,11 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMenuRoute: typeof AuthenticatedAdminMenuRoute
-  AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMenuRoute: AuthenticatedAdminMenuRoute,
-  AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
