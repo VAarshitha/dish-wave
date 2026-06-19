@@ -148,7 +148,7 @@ function MenuPage() {
                   <div className="p-3">
                     <p className="truncate text-sm font-semibold">{it.name}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      ₹{Math.round(it.price)} · {it.prep_time_min} min
+                      ₹{Math.round(it.price)}
                     </p>
                   </div>
                 </motion.button>
