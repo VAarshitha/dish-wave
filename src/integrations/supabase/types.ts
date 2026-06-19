@@ -122,76 +122,6 @@ export type Database = {
           },
         ]
       }
-      kitchen_sessions: {
-        Row: {
-          created_at: string
-          id: string
-          last_seen_at: string
-          staff_id: string
-          token_hash: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          last_seen_at?: string
-          staff_id: string
-          token_hash: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          last_seen_at?: string
-          staff_id?: string
-          token_hash?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "kitchen_sessions_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "kitchen_staff"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      kitchen_staff: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          pin_hash: string
-          restaurant_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          pin_hash: string
-          restaurant_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          pin_hash?: string
-          restaurant_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "kitchen_staff_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       menu_items: {
         Row: {
           calories: number | null
@@ -490,30 +420,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_create_kitchen_staff: {
-        Args: { _name: string; _pin: string; _restaurant_id: string }
-        Returns: {
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          pin_hash: string
-          restaurant_id: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "kitchen_staff"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      admin_reset_kitchen_pin: {
-        Args: { _pin: string; _staff_id: string }
+      admin_set_menu_available: {
+        Args: { _available: boolean; _item_id: string; _passcode: string }
         Returns: undefined
       }
-      admin_set_kitchen_active: {
-        Args: { _active: boolean; _staff_id: string }
+      admin_update_menu_price: {
+        Args: { _item_id: string; _passcode: string; _price: number }
         Returns: undefined
       }
       has_role: {
@@ -524,17 +436,23 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
-      kitchen_logout: { Args: { _token: string }; Returns: undefined }
-      kitchen_pin_login: {
-        Args: { _pin: string; _restaurant_id: string }
+      place_order: {
+        Args: {
+          _items: Json
+          _notes: string
+          _restaurant_id: string
+          _subtotal: number
+          _tax: number
+          _total: number
+        }
         Returns: {
-          staff_id: string
-          staff_name: string
-          token: string
+          id: string
+          serial_date: string
+          serial_number: string
         }[]
       }
-      kitchen_set_order_status: {
-        Args: { _order_id: string; _status: string; _token: string }
+      set_order_status_passcode: {
+        Args: { _order_id: string; _passcode: string; _status: string }
         Returns: {
           completed_at: string | null
           created_at: string
@@ -559,22 +477,6 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
-      }
-      kitchen_validate_token: { Args: { _token: string }; Returns: string }
-      place_order: {
-        Args: {
-          _items: Json
-          _notes: string
-          _restaurant_id: string
-          _subtotal: number
-          _tax: number
-          _total: number
-        }
-        Returns: {
-          id: string
-          serial_date: string
-          serial_number: string
-        }[]
       }
     }
     Enums: {
